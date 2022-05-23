@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import time
 import turtle
 import cmath
@@ -5,13 +6,11 @@ import socket
 import json
 
 hostname = socket.gethostname()
-UDP_IP = socket.gethostbyname(hostname)
+UDP_IP = "0.0.0.0"
 print("***Local ip:" + str(UDP_IP) + "***")
-UDP_PORT = 80
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind((UDP_IP, UDP_PORT))
-sock.listen(1)  # 接收的连接数
-data, addr = sock.accept()
+UDP_PORT = 4545
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind(("0.0.0.0", UDP_PORT))
 
 distance_a1_a2 = 3.0
 meter2pixel = 100
@@ -125,20 +124,25 @@ def draw_uwb_tag(x, y, txt, t):
 
 def read_data():
 
-    line = data.recv(1024).decode('UTF-8')
+    #line = data.recv(1024).decode('UTF-8')
+    data = sock.recvfrom(1024)
+    msg = data[0].decode('UTF-8')
+    adr = data[1]
 
     uwb_list = []
 
     try:
-        uwb_data = json.loads(line)
+        uwb_data = json.loads(msg)
         print(uwb_data)
 
         uwb_list = uwb_data["links"]
+        print("********************\nlinks:\n")
         for uwb_archor in uwb_list:
             print(uwb_archor)
 
-    except:
-        print(line)
+    except Exception as e:
+        print(e)
+        print(data)
     print("")
 
     return uwb_list
@@ -183,20 +187,20 @@ def main():
         list = read_data()
 
         for one in list:
-            if one["A"] == "1782":
+            if one["A"] == "0x1":
                 clean(t_a1)
                 a1_range = uwb_range_offset(float(one["R"]))
                 draw_uwb_anchor(-250, 150, "A1782(0,0)", a1_range, t_a1)
                 node_count += 1
 
-            if one["A"] == "1783":
+            if one["A"] == "0x2":
                 clean(t_a2)
                 a2_range = uwb_range_offset(float(one["R"]))
                 draw_uwb_anchor(-250 + meter2pixel * distance_a1_a2,
                                 150, "A1783(" + str(distance_a1_a2)+")", a2_range, t_a2)
                 node_count += 1
 
-        if node_count == 2:
+        if node_count >= 2:
             x, y = tag_pos(a2_range, a1_range, distance_a1_a2)
             print(x, y)
             clean(t_a3)
