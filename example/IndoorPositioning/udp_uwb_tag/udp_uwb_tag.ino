@@ -10,9 +10,9 @@
 #define PIN_RST 27
 #define PIN_IRQ 34
 
-const char *ssid = "Makerfabs";
-const char *password = "20160704";
-const char *host = "192.168.1.103";
+const char *ssid = "MarVova";
+const char *password = "07030703";
+const char *host = "192.168.1.106";
 WiFiClient client;
 
 struct MyLink *uwb_data;
@@ -47,14 +47,14 @@ void setup()
 
     delay(1000);
 
-    //init the configuration
+    // init the configuration
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
     DW1000Ranging.initCommunication(PIN_RST, DW_CS, PIN_IRQ);
     DW1000Ranging.attachNewRange(newRange);
     DW1000Ranging.attachNewDevice(newDevice);
     DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
-    //we start the module as a tag
+    // we start the module as a tag
     DW1000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C", DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
 
     uwb_data = init_link();
