@@ -89,7 +89,11 @@ class Anchor:
 
 class Room:
     def __init__(self, w, h):
+        self.player = pygame.image.load('player.png')
+        self.player = pygame.transform.scale(
+            self.player, (self.player.get_width()//2, self.player.get_height() // 2))
         self.heading = 0
+        self.heading_offset = 0
         self.sw = SCREEN_WIDTH
         self.sh = SCREEN_HEIGHT
         self.p2m = min((self.sw - 100) / w, (self.sh - 100) / h)
@@ -119,6 +123,10 @@ class Room:
     def get_top(self):
         return self.sh/2 - self.h/2
 
+
+    def set_heading_offset(self):
+        self.heading_offset = self.heading
+
     def draw(self):
         l = int(self.sw/2 - self.w/2)
         t = int(self.sh/2 - self.h/2)
@@ -145,7 +153,6 @@ class Room:
             c = colors[name]
             r = int(abs(float(l["R"])*self.p2m))
             points.append((int(a.cx), int(a.cy), int(abs(r))))
-            print(c,int(a.cx),int(a.cy),int(abs(r)))
             pygame.draw.circle(screen, c, (int(a.cx), int(a.cy)), r, 2)
 
         if len(points) == 3:
@@ -159,7 +166,16 @@ class Room:
             pygame.draw.circle(screen, colors[0], (p1[0], p1[1]), 5, 2)
             pygame.draw.circle(screen, colors[1], (p2[0], p2[1]), 5, 2)
             pygame.draw.circle(screen, colors[2], (p3[0], p3[1]), 5, 2)
-            pygame.draw.circle(screen, colors[3], (pf[0], pf[1]), 5, 2)
+            #pygame.draw.circle(screen, colors[3], (pf[0], pf[1]), 5, 2)
+            #img = pygame.transform.rotate(self.player,self.heading)
+            img = self.rot_center(self.player,self.heading-self.heading_offset)
+            screen.blit(img, (pf[0]-self.player.get_width()//2,pf[1] - self.player.get_height()//2))
+
+    def rot_center(self, img, angle):
+        loc = img.get_rect().center
+        ret = pygame.transform.rotate(img, angle)
+        ret.get_rect().center = loc
+        return ret
 
     def track_anchor(self, a, b, c):
         x1, y1, r1 = a
@@ -176,7 +192,8 @@ class Room:
         return (int(x), int(y), 1)
 
     def set_links(self, data):
-        self.links = data["links"]
+        if len(data["links"])>=3:
+            self.links = data["links"]
         self.heading = data["heading"]
 
 
@@ -204,8 +221,7 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                for a in room.anchors:
-                    print(d.cx-room.get_left(), d.cy - room.get_top())
+                room.set_heading_offset()
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             for a in room.anchors:
